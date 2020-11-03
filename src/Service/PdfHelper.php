@@ -24,8 +24,7 @@ use Psr\Log\NullLogger;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Process\Process;
-use Symfony\Component\Templating\EngineInterface;
+use Twig\Environment;
 
 class PdfHelper
 {
@@ -60,7 +59,7 @@ class PdfHelper
         ArchiverRepository $archiverRepository,
         ShareFileService $shareFileService,
         Filesystem $filesystem,
-        EngineInterface $twig,
+        Environment $twig,
         EntityManagerInterface $entityManager,
         \Swift_Mailer $mailer,
         ParameterBagInterface $params
