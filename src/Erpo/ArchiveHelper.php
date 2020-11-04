@@ -186,13 +186,6 @@ class ArchiveHelper extends AbstractArchiveHelper
                             $data = [
                                 'DocumentVersion' => $fileData,
                             ];
-//                            if (null !== $caseWorker) {
-//                                $data['CaseManagerReference'] = $caseWorker['CaseWorkerId'];
-//                            }
-//                            if (null !== $organisationReference) {
-//                                $data['OrganisationReference'] = $organisationReference;
-//                            }
-//
                             $edocDocument = $this->edoc->createDocument($edocCaseFile, $shareFileDocument, $data);
                         } else {
                             $documentUpdatedAt = $this->edoc->getDocumentUpdatedAt($edocDocument);
