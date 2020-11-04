@@ -70,4 +70,9 @@ class CaseFileRepository extends ServiceEntityRepository
 
         return $entity;
     }
+
+    public function updated(EDocCaseFile $caseFile, Item $item, Archiver $archiver)
+    {
+        return $this->created($caseFile, $item, $archiver);
+    }
 }

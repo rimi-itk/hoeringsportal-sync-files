@@ -60,15 +60,18 @@ abstract class Command extends BaseCommand
         $this->output = $output;
 
         $archiverId = $input->getArgument('archiver');
+        if (null === $this->archiverRepository) {
+            throw new RuntimeException('Archiver repository not set in '.static::class);
+        }
         $this->archiver = $this->archiverRepository->findOneByNameOrId($archiverId);
 
         if (null === $this->archiver) {
             throw new RuntimeException('Invalid archiver: '.$archiverId);
         }
 
-        if ($this->archiver->getType() !== $this->archiverType) {
-            throw new RuntimeException('Invalid archiver type: '.$this->archiver->getType());
-        }
+//        if ($this->archiver->getType() !== $this->archiverType) {
+//            throw new RuntimeException('Invalid archiver type: '.$this->archiver->getType());
+//        }
 
         if ($lastRunAt = $input->getOption('last-run-at')) {
             try {

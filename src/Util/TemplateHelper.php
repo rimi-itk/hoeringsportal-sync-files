@@ -10,12 +10,14 @@
 
 namespace App\Util;
 
+use Twig\Environment;
+
 class TemplateHelper
 {
-    /** @var \Twig_Environment */
+    /** @var Environment */
     private $twig;
 
-    public function __construct(\Twig_Environment $twig)
+    public function __construct(Environment $twig)
     {
         $this->twig = $twig;
     }
