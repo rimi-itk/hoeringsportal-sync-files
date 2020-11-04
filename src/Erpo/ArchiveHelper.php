@@ -168,7 +168,7 @@ class ArchiveHelper extends AbstractArchiveHelper
                         $sourceFileType = null;
 
                         $sourceFile = $shareFileDocument;
-                        $sourceFileCreatedAt = $shareFileDocument->creationDate;
+                        $sourceFileCreatedAt = new \DateTime($shareFileDocument->creationDate);
                         $sourceFileType = ArchiveFormat::getArchiveFormat($sourceFile->getName());
 
                         // @TODO Download file content only if it's needed.
