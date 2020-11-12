@@ -37,6 +37,8 @@ edoc:
    HandlingCodeId: ''
    # getItemList PrimaryCodeTree
    PrimaryCode: ''
+   # getItemList PublicAccessCode
+   PublicAccess: 4 # "Ingen"
 
   # Webhook configuration
   # The payload sent is a JSON object with two keys `esdh` and `edoc_case_file`;
@@ -62,6 +64,8 @@ edoc:
    DocumentCategoryCode: ''
    # getItemList CaseWorker
    CaseManagerReference: '' # "adm\svcedocarkmtm"
+   # getItemList PublicAccessCode
+   PublicAccess: 4 # "Ingen"
 
 sharefile:
  hostname: '' # ShareFile hostname, e.g. aarhus.sharefile.com

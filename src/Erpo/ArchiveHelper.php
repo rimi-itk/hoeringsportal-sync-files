@@ -72,7 +72,7 @@ class ArchiveHelper extends AbstractArchiveHelper
             }
 
             if ($archiver->getType() !== $this->archiverType) {
-                throw new \RuntimeException('Cannot handle archiver with type'.$archiver->getType());
+                throw new \RuntimeException('Cannot handle archiver with type '.$archiver->getType());
             }
 
             $this->shareFile->setArchiver($archiver);
@@ -97,6 +97,7 @@ class ArchiveHelper extends AbstractArchiveHelper
 
                 foreach ($shareFileFolder->getChildren() as $shareFileDocument) {
                     try {
+                        $metadata = $shareFileFolder->metadata;
                         $caseWorker = null;
 
                         if (null === $edocCaseFile) {
@@ -104,7 +105,6 @@ class ArchiveHelper extends AbstractArchiveHelper
                                 $this->info('Getting case file: '.$shareFileFolder->name);
 
                                 $data = [];
-                                $metadata = $shareFileFolder->metadata;
 
                                 if (isset($metadata['handlingsfacet'])) {
                                     $handlingCode = $this->edoc->getHandlingCodeByName($metadata['handlingsfacet']);
@@ -117,6 +117,10 @@ class ArchiveHelper extends AbstractArchiveHelper
                                     if ($primaryCode) {
                                         $data['PrimaryCode'] = $primaryCode['PrimaryCodeId'];
                                     }
+                                }
+
+                                if (isset($metadata['indsigtsgradId'])) {
+                                    $data['PublicAccess'] = $metadata['indsigtsgradId'];
                                 }
 
                                 $callback = function (array $parameters) use ($archiver) {
@@ -186,6 +190,10 @@ class ArchiveHelper extends AbstractArchiveHelper
                             $data = [
                                 'DocumentVersion' => $fileData,
                             ];
+                            if (isset($metadata['indsigtsgradId'])) {
+                                $data['PublicAccess'] = $metadata['indsigtsgradId'];
+                            }
+
                             $edocDocument = $this->edoc->createDocument($edocCaseFile, $shareFileDocument, $data);
                         } else {
                             $documentUpdatedAt = $this->edoc->getDocumentUpdatedAt($edocDocument);
