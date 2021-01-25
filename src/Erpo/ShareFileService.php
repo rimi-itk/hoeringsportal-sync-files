@@ -192,6 +192,10 @@ class ShareFileService
             return !(null !== $changedAfter && isset($item['CreationDate'])
                 && new \DateTime($item['CreationDate']) < $changedAfter);
         });
+        // Add metadata values to each file.
+        foreach ($files as &$file) {
+            $this->setMetadata($file);
+        }
 
         return $this->construct(Item::class, $files);
     }

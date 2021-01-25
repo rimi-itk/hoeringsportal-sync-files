@@ -19,7 +19,9 @@ use App\Service\AbstractArchiveHelper;
 use App\Service\EdocService;
 use App\ShareFile\Item;
 use App\Util\TemplateHelper;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use GuzzleHttp\Client;
 use ItkDev\Edoc\Entity\ArchiveFormat;
 use Psr\Log\LoggerAwareTrait;
@@ -84,8 +86,8 @@ class ArchiveHelper extends AbstractArchiveHelper
             // @FIXME: Getting data from ShareFile should be moved into a service/helper.
             if (null !== $itemId) {
                 $this->info('Getting item '.$itemId);
-                $hearing = $this->shareFile->getErpoItem($itemId);
-                $shareFileData = [$hearing];
+                $erpo = $this->shareFile->getErpoItem($itemId);
+                $shareFileData = [$erpo];
             } else {
                 $date = $archiver->getLastRunAt() ?? new \DateTime('1 month ago');
                 $this->info('Getting files updated since '.$date->format(\DateTime::ATOM).' from ShareFile');
@@ -98,7 +100,7 @@ class ArchiveHelper extends AbstractArchiveHelper
                 foreach ($shareFileFolder->getChildren() as $shareFileDocument) {
                     try {
                         $metadata = $shareFileFolder->metadata;
-                        $caseWorker = null;
+                        $documentMetadata = $shareFileDocument->metadata;
 
                         if (null === $edocCaseFile) {
                             if ($archiver->getCreateCaseFile()) {
@@ -122,6 +124,8 @@ class ArchiveHelper extends AbstractArchiveHelper
                                 if (isset($metadata['indsigtsgradId'])) {
                                     $data['PublicAccess'] = $metadata['indsigtsgradId'];
                                 }
+
+                                $this->debug(json_encode(['eDoc Case file data' => $data], JSON_PRETTY_PRINT));
 
                                 $callback = function (array $parameters) use ($archiver) {
                                     $status = $parameters['status'] ?? null;
@@ -193,6 +197,30 @@ class ArchiveHelper extends AbstractArchiveHelper
                             if (isset($metadata['indsigtsgradId'])) {
                                 $data['PublicAccess'] = $metadata['indsigtsgradId'];
                             }
+
+                            if (isset($documentMetadata['dokumentdato'])) {
+                                try {
+                                    $documentDate = new DateTimeImmutable($documentMetadata['dokumentdato']);
+                                    $data['DocumentDate'] = $documentDate->format('Y-m-d');
+                                } catch (Exception $e) {
+                                }
+                            }
+
+                            if (isset($documentMetadata['dokumenttype'])) {
+                                $documentType = $this->edoc->getDocumentTypeByName($documentMetadata['dokumenttype']);
+                                if ($documentType) {
+                                    $data['DocumentTypeReference'] = $documentType['DocumentTypeId'];
+                                }
+                            }
+
+                            if (isset($documentMetadata['status'])) {
+                                $documentStatus = $this->edoc->getDocumentStatusByName($documentMetadata['status']);
+                                if ($documentStatus) {
+                                    $data['DocumentStatusCode'] = $documentStatus['DocumentStatusCodeId'];
+                                }
+                            }
+
+                            $this->debug(json_encode(['eDoc Document data' => $data], JSON_PRETTY_PRINT));
 
                             $edocDocument = $this->edoc->createDocument($edocCaseFile, $shareFileDocument, $data);
                         } else {

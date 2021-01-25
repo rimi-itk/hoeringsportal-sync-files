@@ -62,6 +62,12 @@ class EdocService
     private $edoc;
 
     /** @var array */
+    private $documentTypes;
+
+    /** @var array */
+    private $documentStatuses;
+
+    /** @var array */
     private $handlingCodeTree;
 
     /** @var array */
@@ -526,6 +532,40 @@ class EdocService
         }
     }
 
+    public function getDocumentTypeByName(string $name)
+    {
+        if (null === $this->documentTypes) {
+            $this->documentTypes = $this->edoc()->getItemList(ItemListType::DOCUMENT_TYPE);
+        }
+
+        if (\is_array($this->documentTypes)) {
+            foreach ($this->documentTypes as $item) {
+                if (0 === strcasecmp($name, $item['DocumentTypeName'])) {
+                    return $item;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public function getDocumentStatusByName(string $name)
+    {
+        if (null === $this->documentStatuses) {
+            $this->documentStatuses = $this->edoc()->getItemList(ItemListType::DOCUMENT_STATUS_CODE);
+        }
+
+        if (\is_array($this->documentStatuses)) {
+            foreach ($this->documentStatuses as $item) {
+                if (0 === strcasecmp($name, $item['DocumentStatusCodeName'])) {
+                    return $item;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public function getHandlingCodeByName(string $name)
     {
         if (null === $this->handlingCodeTree) {
@@ -534,7 +574,7 @@ class EdocService
 
         if (\is_array($this->handlingCodeTree)) {
             foreach ($this->handlingCodeTree as $item) {
-                if ($name === $item['HandlingCodeName']) {
+                if (0 === strcasecmp($name, $item['HandlingCodeName'])) {
                     return $item;
                 }
             }
