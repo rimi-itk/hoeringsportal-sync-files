@@ -279,12 +279,12 @@ class ArchiveHelper extends AbstractArchiveHelper
                 ->setFrom($config['from'])
                 ->setTo($config['to'])
                 ->setBody(
-                         implode(PHP_EOL, [
-                             json_encode($context, JSON_PRETTY_PRINT),
-                             $t->getTraceAsString(),
-                         ]),
-                         'text/plain'
-                     );
+                    implode(PHP_EOL, [
+                        json_encode($context, JSON_PRETTY_PRINT),
+                        $t->getTraceAsString(),
+                    ]),
+                    'text/plain'
+                );
 
             $this->mailer->send($message);
         }

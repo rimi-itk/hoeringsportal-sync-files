@@ -97,3 +97,9 @@ services:
             - method: setArchiverRepository
               arguments:
                   - '@App\Repository\ArchiverRepository'
+
+    App\Command\MinEjendom\UpdateDocumentsCommand:
+        calls:
+            - method: setArchiverRepository
+              arguments:
+                  - '@App\Repository\ArchiverRepository'

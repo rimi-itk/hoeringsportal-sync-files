@@ -59,6 +59,7 @@ easy_admin:
                               sharefile2edoc: !php/const App\Entity\Archiver::TYPE_SHAREFILE2EDOC
                               !php/const App\Entity\Archiver::TYPE_ERPO2SHAREFILE2EDOC: !php/const App\Entity\Archiver::TYPE_ERPO2SHAREFILE2EDOC
                               pdfcombine: !php/const App\Entity\Archiver::TYPE_PDF_COMBINE
+                              !php/const App\Entity\Archiver::TYPE_MIN_EJENDOM: !php/const App\Entity\Archiver::TYPE_MIN_EJENDOM
 
                     - property: enabled
                     - property: configuration

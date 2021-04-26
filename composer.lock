@@ -2279,7 +2279,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/itk-dev/edoc-api",
-                "reference": "9fb05024188d016d356d57ae803e71e8047e01a9"
+                "reference": "d4b3923bfc40a0427dcf04987c5b8c50cae63861"
             },
             "require": {
                 "ext-curl": "*",
@@ -2296,17 +2296,17 @@
                 }
             },
             "scripts": {
-                "check-coding-standards/php-cs-fixer": [
+                "coding-standards-check/php-cs-fixer": [
                     "php -n vendor/bin/php-cs-fixer --config=.php_cs.dist fix --dry-run"
                 ],
-                "check-coding-standards": [
-                    "@check-coding-standards/php-cs-fixer"
+                "coding-standards-check": [
+                    "@coding-standards-check/php-cs-fixer"
                 ],
-                "apply-coding-standards/php-cs-fixer": [
+                "coding-standards-apply/php-cs-fixer": [
                     "php -n vendor/bin/php-cs-fixer --config=.php_cs.dist fix"
                 ],
-                "apply-coding-standards": [
-                    "@apply-coding-standards/php-cs-fixer"
+                "coding-standards-apply": [
+                    "@coding-standards-apply/php-cs-fixer"
                 ]
             },
             "license": [
@@ -2319,7 +2319,7 @@
                 }
             ],
             "homepage": "https://github.com/itk-dev/edoc-api",
-            "time": "2021-01-25T14:56:13+00:00"
+            "time": "2021-04-26T14:28:09+00:00"
         },
         {
             "name": "jdorn/sql-formatter",
@@ -2564,6 +2564,7 @@
                 "domain parsing",
                 "icann"
             ],
+            "abandoned": true,
             "time": "2018-02-16T07:29:26+00:00"
         },
         {

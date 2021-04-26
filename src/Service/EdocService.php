@@ -464,9 +464,16 @@ class EdocService
         return 1 === \count($result) ? reset($result) : null;
     }
 
-    public function getDocuments(array $case)
+    public function getDocumentList(CaseFile $case)
     {
-        return $this->edoc()->searchDocument($case);
+        return $this->edoc()->getDocumentList($case);
+    }
+
+    public function getDocuments(CaseFile $case)
+    {
+        return $this->edoc()->searchDocument([
+            'CaseFileIdentifier' => '200031',
+        ]);
     }
 
     public function getDocumentsBy(array $criteria)
@@ -489,6 +496,11 @@ class EdocService
         ]);
 
         return 1 === \count($result) ? reset($result) : null;
+    }
+
+    public function getDocumentVersion(Document $document)
+    {
+        return $this->edoc()->getDocumentVersion($document->DocumentVersionIdentifier);
     }
 
     public function getCaseWorkerByAz($az)
