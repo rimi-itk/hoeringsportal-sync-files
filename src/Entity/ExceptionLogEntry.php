@@ -44,7 +44,7 @@ class ExceptionLogEntry
      */
     private $hidden = false;
 
-    public function __construct(\Throwable $t)
+    public function __construct(\Throwable $t, array $context = [])
     {
         $trace = array_map(function (array &$frame) {
             $frame['num_args'] = \count($frame['args']);
@@ -54,8 +54,12 @@ class ExceptionLogEntry
         }, $t->getTrace());
 
         $this->createdAt = new \DateTime();
-        $this->message = $t->getMessage();
-        $this->data = $trace;
+        $this->message = mb_substr($t->getMessage(), 0, 255);
+        $this->data = [
+            'message' => $t->getMessage(),
+            'trace' => $trace,
+            'context' => $context,
+        ];
     }
 
     public function getId(): ?int

@@ -195,7 +195,10 @@ class ArchiveHelper extends AbstractArchiveHelper
                             throw new RuntimeException('Error creating response: '.$shareFileResponse['Name']);
                         }
                     } catch (\Throwable $t) {
-                        $this->logException($t);
+                        $this->logException($t, [
+                            'shareFileHearing' => $shareFileHearing,
+                            'shareFileResponse' => $shareFileResponse,
+                        ]);
                     }
                 }
             }
@@ -346,11 +349,17 @@ class ArchiveHelper extends AbstractArchiveHelper
                                 $this->warning(sprintf('Overview file not found: %s (%s)', $title, $pattern));
                             }
                         } catch (\Throwable $t) {
-                            $this->logException($t);
+                            $this->logException($t, [
+                                'shareFileHearing' => $shareFileHearing,
+                                'edocHearing' => $edocHearing,
+                                'overview' => $overview,
+                            ]);
                         }
                     }
                 } catch (\Throwable $t) {
-                    $this->logException($t);
+                    $this->logException($t, [
+                        'shareFileHearing' => $shareFileHearing,
+                    ]);
                 }
             }
 
@@ -371,10 +380,10 @@ class ArchiveHelper extends AbstractArchiveHelper
         }
     }
 
-    private function logException(\Throwable $t)
+    private function logException(\Throwable $t, array $context = [])
     {
-        $this->emergency($t->getMessage());
-        $logEntry = new ExceptionLogEntry($t);
+        $this->emergency($t->getMessage(), $context);
+        $logEntry = new ExceptionLogEntry($t, $context);
         $this->entityManager->persist($logEntry);
         $this->entityManager->flush();
 
@@ -385,7 +394,10 @@ class ArchiveHelper extends AbstractArchiveHelper
                 ->setFrom($config['from'])
                 ->setTo($config['to'])
                 ->setBody(
-                    $t->getTraceAsString(),
+                    implode(PHP_EOL, [
+                        json_encode($context, JSON_PRETTY_PRINT),
+                        $t->getTraceAsString(),
+                    ]),
                     'text/plain'
                 );
 
