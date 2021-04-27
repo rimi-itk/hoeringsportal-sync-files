@@ -87,6 +87,7 @@ class Helper extends AbstractArchiveHelper
                 $minEjendomDocument->addData('[sag]', $sag);
 
                 $minEjendomDocument->addData('[edoc][case]', $case->getData());
+                $minEjendomDocument->addData('[edoc][document]', $document->getData());
 
                 $this->info(sprintf('Document: %s', $document->DocumentIdentifier));
 

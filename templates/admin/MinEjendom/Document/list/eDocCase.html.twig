@@ -1,4 +1,5 @@
 {% set edoc_data = item.data.edoc.case|default(null) %}
+{% set value = edoc_data.SequenceNumber %}
 {% set url = edoc_data.Links.OpenCaseFile|default(null) %}
 {% if url %}
     <a href="{{ url }}">
