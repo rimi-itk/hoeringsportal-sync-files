@@ -11,6 +11,8 @@
 namespace App\MinEjendom;
 
 use App\Entity\Archiver;
+use App\Entity\MinEjendom\Document;
+use App\Repository\MinEjendom\DocumentRepository;
 use App\Service\AbstractArchiveHelper;
 use App\Service\EdocService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -36,20 +38,21 @@ class Helper extends AbstractArchiveHelper
     /** @var MinEjendomApiHelper */
     private $minEjendom;
 
+    /** @var DocumentRepository */
+    private $documentRepository;
+
     /** @var EntityManagerInterface */
     private $entityManager;
 
     /** @var \Swift_Mailer */
     private $mailer;
 
-    /** @var Archiver */
-    private $archiver;
-
-    public function __construct(SagerApiHelper $sager, EdocService $edoc, MinEjendomApiHelper $minEjendom, EntityManagerInterface $entityManager, \Swift_Mailer $mailer)
+    public function __construct(SagerApiHelper $sager, EdocService $edoc, MinEjendomApiHelper $minEjendom, DocumentRepository $documentRepository, EntityManagerInterface $entityManager, \Swift_Mailer $mailer)
     {
         $this->sager = $sager;
         $this->edoc = $edoc;
         $this->minEjendom = $minEjendom;
+        $this->documentRepository = $documentRepository;
         $this->entityManager = $entityManager;
         $this->mailer = $mailer;
     }
@@ -61,7 +64,6 @@ class Helper extends AbstractArchiveHelper
         $this->minEjendom->setArchiver($archiver);
 
         $sager = $this->sager->getSager();
-
         foreach ($sager as $index => $sag) {
             $eDocCaseSequenceNumber = $sag['esdh'];
             $byggesagGuid = $sag['minEjendomGuid'];
@@ -72,6 +74,20 @@ class Helper extends AbstractArchiveHelper
             $documents = $this->edoc->getDocumentList($case);
             // $types = $this->edoc->getArchiveFormats();
             foreach ($documents as $document) {
+                $minEjendomDocument = $this->documentRepository->findOneBy([
+                    'archiver' => $archiver,
+                    'eDocCaseSequenceNumber' => $eDocCaseSequenceNumber,
+                    'documentIdentifier' => $document->DocumentIdentifier,
+                ])
+                    ?? (new Document())
+                        ->setArchiver($archiver)
+                        ->setEDocCaseSequenceNumber($eDocCaseSequenceNumber)
+                        ->setDocumentIdentifier($document->DocumentIdentifier);
+
+                $minEjendomDocument->addData('[sag]', $sag);
+
+                $minEjendomDocument->addData('[edoc][case]', $case->getData());
+
                 $this->info(sprintf('Document: %s', $document->DocumentIdentifier));
 
                 $version = $this->edoc->getDocumentVersion($document);
@@ -88,9 +104,19 @@ class Helper extends AbstractArchiveHelper
                     'imageFormat' => '.'.strtolower($document->ArchiveFormatFileExtension),
                 ];
 
+                $minEjendomDocument->addData('[document][data]', $data);
+
                 $response = $this->minEjendom->createDocument($data, $version->getBinaryContents());
 
+                $minEjendomDocument->addData('[document][response]', [
+                    'status_code' => $response->getStatusCode(),
+                    'body' => (string) $response->getBody(),
+                ]);
+
                 $this->info(sprintf('Response status code: %d', $response->getStatusCode()));
+
+                $this->entityManager->persist($minEjendomDocument);
+                $this->entityManager->flush();
             }
         }
     }

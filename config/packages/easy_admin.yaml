@@ -30,6 +30,9 @@ easy_admin:
             - entity: EdocCaseFile
             - entity: EdocDocument
 
+            - label: 'Min ejendom'
+            - entity: MinEjendomDocument
+
     formats:
         datetime: 'd/m/Y H:i:s'
 
@@ -188,3 +191,35 @@ easy_admin:
                     - property: createdAt
                     - property: data
                       template: admin/Edoc/show/data.html.twig
+
+        MinEjendomDocument:
+            label: Document
+            class: App\Entity\MinEjendom\Document
+            disabled_actions: ['new', 'edit', 'delete']
+
+            list:
+                form_filters:
+                    # - archiver
+
+                sort: ['updatedAt', 'DESC']
+
+                fields:
+                    - property: archiver
+                    - property: eDocCaseSequenceNumber
+                      label: eDoc case sequence number
+                      template: admin/MinEjendom/Document/list/eDocCaseSequenceNumber.html.twig
+                    - property: documentIdentifier
+                    - property: updatedAt
+                    - property: createdAt
+
+            show:
+                fields:
+                    - property: archiver
+                    - property: eDocCaseSequenceNumber
+                      label: eDoc case sequence number
+                      template: admin/MinEjendom/Document/list/eDocCaseSequenceNumber.html.twig
+                    - property: documentIdentifier
+                    - property: updatedAt
+                    - property: createdAt
+                    - property: data
+                      template: admin/MinEjendom/show/data.html.twig
