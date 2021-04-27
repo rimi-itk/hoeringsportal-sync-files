@@ -99,7 +99,7 @@ class Helper extends AbstractArchiveHelper
                 $minEjendomDocument->addData('[edoc][case]', $case->getData());
                 $minEjendomDocument->addData('[edoc][document]', $document->getData());
 
-                $this->info(sprintf('Document: %s', $document->DocumentIdentifier));
+                $this->info(sprintf('Document: %s (%s)', $document->DocumentNumber, $document->DocumentIdentifier));
 
                 $version = $this->edoc->getDocumentVersion($document);
 
