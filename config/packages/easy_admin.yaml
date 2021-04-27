@@ -212,16 +212,18 @@ easy_admin:
                       label: eDoc document
                       template: admin/MinEjendom/Document/list/eDocDocument.html.twig
                     - property: documentIdentifier
+                      template: admin/MinEjendom/Document/list/documentIdentifier.html.twig
                     - property: updatedAt
                     - property: createdAt
 
             show:
                 fields:
                     - property: archiver
-                    - property: eDocCaseSequenceNumber
-                      label: eDoc case sequence number
-                      template: admin/MinEjendom/Document/list/eDocCaseSequenceNumber.html.twig
+                    - property: eDocCase
+                      label: eDoc case
+                      template: admin/MinEjendom/Document/list/eDocCase.html.twig
                     - property: documentIdentifier
+                      template: admin/MinEjendom/Document/list/documentIdentifier.html.twig
                     - property: updatedAt
                     - property: createdAt
                     - property: data

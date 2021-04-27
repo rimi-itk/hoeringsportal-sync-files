@@ -86,12 +86,26 @@ class Helper extends AbstractArchiveHelper
 
                 $minEjendomDocument->addData('[sag]', $sag);
 
+                $baseUrl = rtrim($archiver->getConfigurationValue('[minejendom][url]'), '/');
+                $data = [
+                    'base_url' => $baseUrl,
+                ];
+                if (isset($sag['minEjendomId'])) {
+                    $data['case_url'] = $baseUrl . '/Byggesag/Vis/' . $sag['minEjendomId'];
+                }
+
+                $minEjendomDocument->addData('[minejendom]', $data);
+
                 $minEjendomDocument->addData('[edoc][case]', $case->getData());
                 $minEjendomDocument->addData('[edoc][document]', $document->getData());
 
                 $this->info(sprintf('Document: %s', $document->DocumentIdentifier));
 
                 $version = $this->edoc->getDocumentVersion($document);
+
+                $data = $version->getData();
+                unset($data['DocumentContents']);
+                $minEjendomDocument->addData('[edoc][version]', $data);
 
                 $this->info(sprintf('Version: %s', $version->DocumentVersionNumber));
 
