@@ -45,6 +45,13 @@ class Document
     private $documentIdentifier;
 
     /**
+     * The document title.
+     *
+     * @ORM\Column(type="string", length=255)
+     */
+    private $documentTitle;
+
+    /**
      * @ORM\Column(type="json")
      */
     private $data = [];
@@ -109,9 +116,21 @@ class Document
         return $this->archiver;
     }
 
-    public function setArchiver(Archiver $archiver)
+    public function setArchiver(Archiver $archiver): self
     {
         $this->archiver = $archiver;
+
+        return $this;
+    }
+
+    public function getDocumentTitle(): ?string
+    {
+        return $this->documentTitle;
+    }
+
+    public function setDocumentTitle(string $documentTitle): self
+    {
+        $this->documentTitle = $documentTitle;
 
         return $this;
     }

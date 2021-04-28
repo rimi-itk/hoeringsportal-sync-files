@@ -390,9 +390,9 @@ class EdocService
         $this->edoc()->attachFile($document, $name, $contents);
     }
 
-    public function getAttachments($documentId)
+    public function getAttachments(Document $document)
     {
-        return $this->edoc()->getAttachments(['DocumentIdentifier' => $documentId]);
+        return $this->edoc()->getDocumentAttachmentList($document);
     }
 
     /**
@@ -488,6 +488,13 @@ class EdocService
         return 1 === \count($result) ? reset($result) : null;
     }
 
+    public function getDocumentByNumber(string $number)
+    {
+        $result = $this->edoc()->searchDocument(['DocumentNumber' => $number]);
+
+        return 1 === \count($result) ? reset($result) : null;
+    }
+
     public function getDocumentByName(CaseFile $case, string $name)
     {
         $result = $this->edoc()->searchDocument([
@@ -498,9 +505,9 @@ class EdocService
         return 1 === \count($result) ? reset($result) : null;
     }
 
-    public function getDocumentVersion(Document $document)
+    public function getDocumentVersion(string $documentVersionIdentifier)
     {
-        return $this->edoc()->getDocumentVersion($document->DocumentVersionIdentifier);
+        return $this->edoc()->getDocumentVersion($documentVersionIdentifier);
     }
 
     public function getCaseWorkerByAz($az)
