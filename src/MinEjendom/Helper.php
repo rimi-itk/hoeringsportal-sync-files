@@ -134,17 +134,23 @@ class Helper extends AbstractArchiveHelper
 
             $documentDocumentIdentifier = $document->DocumentIdentifier;
             $documentTitle = $document->TitleText;
+
+            $version = $this->edoc->getDocumentVersion($document->DocumentVersionIdentifier);
+            $imageFormat = '.'.strtolower($this->archiveFormats[$version->ArchiveFormatCode]->FileExtension ?? '');
+            // Remove file extension.
+            $filename = preg_replace('/'.preg_quote($imageFormat, '/').'/i', '', $documentTitle);
+
             $minEjendomDocument = $this->documentRepository->findOneBy([
                 'archiver' => $this->archiver,
                 'eDocCaseSequenceNumber' => $eDocCaseSequenceNumber,
                 'documentIdentifier' => $documentDocumentIdentifier,
-                'documentTitle' => $documentTitle,
+                'filename' => $filename.$imageFormat,
             ]) ??
                 (new Document())
                     ->setArchiver($this->archiver)
                     ->setEDocCaseSequenceNumber($eDocCaseSequenceNumber)
                     ->setDocumentIdentifier($documentDocumentIdentifier)
-                    ->setDocumentTitle($documentTitle);
+                    ->setFilename($filename.$imageFormat);
 
             $minEjendomDocument->addData('[sag]', $sag);
 
@@ -165,28 +171,23 @@ class Helper extends AbstractArchiveHelper
             }
             $this->info(sprintf('Document: %s (%s)', $document->DocumentNumber, $document->DocumentIdentifier));
 
-            // The main document.
-            $version = $this->edoc->getDocumentVersion($document->DocumentVersionIdentifier);
-
-            $data = $version->getData();
-            unset($data['DocumentContents']);
-            $minEjendomDocument->addData('[edoc][version]', $data);
+            $minEjendomDocument->addData('[edoc][version]', $version->getData());
 
             $this->info(sprintf('Version: %s', $version->DocumentVersionNumber));
 
-            $imageFormat = $this->archiveFormats[$version->ArchiveFormatCode]->FileExtension ?? '';
             $aktNummer = 1;
             if (preg_match('/-(?<number>\d+)$/', $document->DocumentNumber, $matches)) {
                 $aktNummer = (int) $matches['number'];
             }
+
             $data = [
                 'byggesagGuid' => $byggesagGuid,
                 'originalCreatedDate' => $document->DocumentDate,
                 'EksternID' => $document->DocumentNumber,
                 'aktNummer' => $aktNummer,
                 'beskrivelse' => $document->TitleText,
-                'filename' => $documentTitle,
-                'imageFormat' => '.'.strtolower($imageFormat),
+                'filename' => $filename,
+                'imageFormat' => $imageFormat,
             ];
 
             $minEjendomDocument->addData('[document][data]', $data);

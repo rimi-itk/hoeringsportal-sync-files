@@ -18,7 +18,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20210428134636 extends AbstractMigration
+final class Version20210428141142 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -30,7 +30,7 @@ final class Version20210428134636 extends AbstractMigration
         // this up() migration is auto-generated, please modify it to your needs
         $this->abortIf('mysql' !== $this->connection->getDatabasePlatform()->getName(), 'Migration can only be executed safely on \'mysql\'.');
 
-        $this->addSql('ALTER TABLE minejendom_document ADD document_title VARCHAR(255) NOT NULL');
+        $this->addSql('ALTER TABLE minejendom_document ADD filename VARCHAR(255) NOT NULL');
     }
 
     public function down(Schema $schema): void
@@ -38,6 +38,6 @@ final class Version20210428134636 extends AbstractMigration
         // this down() migration is auto-generated, please modify it to your needs
         $this->abortIf('mysql' !== $this->connection->getDatabasePlatform()->getName(), 'Migration can only be executed safely on \'mysql\'.');
 
-        $this->addSql('ALTER TABLE minejendom_document DROP document_title');
+        $this->addSql('ALTER TABLE minejendom_document DROP filename');
     }
 }

@@ -45,11 +45,11 @@ class Document
     private $documentIdentifier;
 
     /**
-     * The document title.
+     * The document filename.
      *
      * @ORM\Column(type="string", length=255)
      */
-    private $documentTitle;
+    private $filename;
 
     /**
      * @ORM\Column(type="json")
@@ -123,14 +123,14 @@ class Document
         return $this;
     }
 
-    public function getDocumentTitle(): ?string
+    public function getFilename(): ?string
     {
-        return $this->documentTitle;
+        return $this->filename;
     }
 
-    public function setDocumentTitle(string $documentTitle): self
+    public function setFilename(string $filename): self
     {
-        $this->documentTitle = $documentTitle;
+        $this->filename = $filename;
 
         return $this;
     }

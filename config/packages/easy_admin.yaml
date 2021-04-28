@@ -212,8 +212,8 @@ easy_admin:
                       label: eDoc document
                       template: admin/MinEjendom/Document/list/eDocDocument.html.twig
                     - property: documentIdentifier
-                      template: admin/MinEjendom/Document/list/documentIdentifier.html.twig
-                    - property: documentTitle
+                    - property: filename
+                      template: admin/MinEjendom/Document/list/filename.html.twig
                     - property: updatedAt
                     - property: createdAt
 
@@ -223,9 +223,8 @@ easy_admin:
                     - property: eDocCase
                       label: eDoc case
                       template: admin/MinEjendom/Document/list/eDocCase.html.twig
-                    - property: documentIdentifier
-                      template: admin/MinEjendom/Document/list/documentIdentifier.html.twig
-                    - property: documentTitle
+                    - property: filename
+                      template: admin/MinEjendom/Document/list/filename.html.twig
                     - property: updatedAt
                     - property: createdAt
                     - property: data
