@@ -74,8 +74,13 @@ supervisorctl reload
 supervisorctl restart symfony_hoeringsportal_documents
 ```
 
+## Min ejendom
 
-# Docker
+```sh
+bin/console app:min-ejendom:update-documents --help
+```
+
+## Development
 
 ```sh
 docker-compose pull

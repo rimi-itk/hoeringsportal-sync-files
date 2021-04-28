@@ -35,16 +35,22 @@ class UpdateDocumentsCommand extends Command
     {
         parent::configure();
         $this->setName('app:min-ejendom:update-documents')
-            ->addOption('eDoc-case-sequence-number', null, InputOption::VALUE_REQUIRED, 'eDoc document to update');
+            ->setDescription('Upload documents to “Min ejendom”')
+            ->addOption('eDoc-case-sequence-number', null, InputOption::VALUE_REQUIRED, 'eDoc case to update')
+            ->addOption('eDoc-document-number', null, InputOption::VALUE_REQUIRED, 'eDoc document to update');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         parent::execute($input, $output);
 
-        $itemId = $input->getOption('eDoc-case-sequence-number');
+        $eDocCaseSequenceNumber = $input->getOption('eDoc-case-sequence-number');
+        $eDocDocumentNumber = $input->getOption('eDoc-document-number');
         $logger = new ConsoleLogger($output);
         $this->helper->setLogger($logger);
-        $this->helper->updateDocuments($this->archiver, $itemId);
+        $this->helper->updateDocuments($this->archiver, [
+            'eDocCaseSequenceNumber' => $eDocCaseSequenceNumber,
+            'eDocDocumentNumber' => $eDocDocumentNumber,
+        ]);
     }
 }

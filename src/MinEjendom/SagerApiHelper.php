@@ -30,6 +30,14 @@ class SagerApiHelper
         $this->archiver = $archiver;
     }
 
+    /**
+     * [
+     *  {"esdh": …, "minEjendomGuid": …, "minEjendomId": …},
+     *  …
+     * ].
+     *
+     * @return array
+     */
     public function getSager()
     {
         $response = $this->client()->GET('api/sager');

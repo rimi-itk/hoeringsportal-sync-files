@@ -58,7 +58,7 @@ class Helper extends AbstractArchiveHelper
         $this->mailer = $mailer;
     }
 
-    public function updateDocuments(Archiver $archiver, string $eDocCaseSequenceNumber = null)
+    public function updateDocuments(Archiver $archiver, array $options = [])
     {
         $this->archiver = $archiver;
 
@@ -73,12 +73,20 @@ class Helper extends AbstractArchiveHelper
                     $eDocCaseSequenceNumber = $sag['esdh'];
                     $byggesagGuid = $sag['minEjendomGuid'];
 
+                    if (isset($options['eDocCaseSequenceNumber']) && $options['eDocCaseSequenceNumber'] !== $eDocCaseSequenceNumber) {
+                        continue;
+                    }
+
                     $this->info(sprintf('% 4d: %s -> %s', $index + 1, $eDocCaseSequenceNumber, $byggesagGuid));
 
                     $case = $this->edoc->getCaseBySequenceNumber($eDocCaseSequenceNumber);
                     $documents = $this->edoc->getDocumentList($case);
                     foreach ($documents as $document) {
                         try {
+                            if (isset($options['eDocDocumentNumber']) && $options['eDocDocumentNumber'] !== $document->DocumentNumber) {
+                                continue;
+                            }
+
                             $minEjendomDocument = $this->documentRepository->findOneBy([
                                 'archiver' => $archiver,
                                 'eDocCaseSequenceNumber' => $eDocCaseSequenceNumber,
@@ -177,12 +185,12 @@ class Helper extends AbstractArchiveHelper
                 ->setFrom($config['from'])
                 ->setTo($config['to'])
                 ->setBody(
-                         implode(PHP_EOL, [
-                             json_encode($context, JSON_PRETTY_PRINT),
-                             $t->getTraceAsString(),
-                         ]),
-                         'text/plain'
-                     );
+                    implode(PHP_EOL, [
+                        json_encode($context, JSON_PRETTY_PRINT),
+                        $t->getTraceAsString(),
+                    ]),
+                    'text/plain'
+                );
 
             $this->mailer->send($message);
         }
