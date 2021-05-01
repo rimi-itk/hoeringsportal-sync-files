@@ -94,6 +94,12 @@ class Helper extends AbstractArchiveHelper
                                 continue;
                             }
 
+                            // Some documents don't have a version identifier,
+                            // i.e. they have no files.
+                            if (empty($document->DocumentVersionIdentifier)) {
+                                return;
+                            }
+
                             $this->createDocument($document, $sag, $case);
 
                             $attachments = $this->edoc->getAttachments($document);
