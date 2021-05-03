@@ -139,12 +139,11 @@ class Helper extends AbstractArchiveHelper
             $byggesagGuid = $sag['minEjendomGuid'];
 
             $documentDocumentIdentifier = $document->DocumentIdentifier;
-            $documentTitle = $document->TitleText;
 
             $version = $this->edoc->getDocumentVersion($document->DocumentVersionIdentifier);
             $imageFormat = '.'.strtolower($this->archiveFormats[$version->ArchiveFormatCode]->FileExtension ?? '');
             // Remove file extension.
-            $filename = preg_replace('/'.preg_quote($imageFormat, '/').'/i', '', $documentTitle);
+            $filename = preg_replace('/'.preg_quote($imageFormat, '/').'/i', '', $document->TitleText);
 
             $minEjendomDocument = $this->documentRepository->findOneBy([
                 'archiver' => $this->archiver,
@@ -191,7 +190,7 @@ class Helper extends AbstractArchiveHelper
                 'originalCreatedDate' => $document->DocumentDate,
                 'EksternID' => $document->DocumentNumber,
                 'aktNummer' => $aktNummer,
-                'beskrivelse' => $document->TitleText,
+                'beskrivelse' => $mainDocument->TitleText ?? $document->TitleText,
                 'filename' => $filename,
                 'imageFormat' => $imageFormat,
             ];
