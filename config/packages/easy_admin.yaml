@@ -211,7 +211,6 @@ easy_admin:
                     - property: eDocDocument
                       label: eDoc document
                       template: admin/MinEjendom/Document/list/eDocDocument.html.twig
-                    - property: documentIdentifier
                     - property: filename
                       template: admin/MinEjendom/Document/list/filename.html.twig
                     - property: updatedAt
@@ -225,6 +224,8 @@ easy_admin:
                       template: admin/MinEjendom/Document/list/eDocCase.html.twig
                     - property: filename
                       template: admin/MinEjendom/Document/list/filename.html.twig
+                    - property: documentIdentifier
+                    - property: documentGuid
                     - property: updatedAt
                     - property: createdAt
                     - property: data

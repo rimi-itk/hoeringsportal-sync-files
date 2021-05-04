@@ -45,6 +45,13 @@ class Document
     private $documentIdentifier;
 
     /**
+     * The MinEjendom document guid.
+     *
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $documentGuid;
+
+    /**
      * The document filename.
      *
      * @ORM\Column(type="string", length=255)
@@ -87,6 +94,18 @@ class Document
     public function setDocumentIdentifier(string $documentIdentifier): self
     {
         $this->documentIdentifier = $documentIdentifier;
+
+        return $this;
+    }
+
+    public function getDocumentGuid(): ?string
+    {
+        return $this->documentGuid;
+    }
+
+    public function setDocumentGuid(string $documentGuid): self
+    {
+        $this->documentGuid = $documentGuid;
 
         return $this;
     }

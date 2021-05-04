@@ -53,6 +53,9 @@ class Helper extends AbstractArchiveHelper
     /** @var array */
     private $archiveFormats;
 
+    /** @var Archiver */
+    private $archiver;
+
     public function __construct(SagerApiHelper $sager, EdocService $edoc, MinEjendomApiHelper $minEjendom, DocumentRepository $documentRepository, EntityManagerInterface $entityManager, \Swift_Mailer $mailer)
     {
         $this->sager = $sager;
@@ -150,12 +153,11 @@ class Helper extends AbstractArchiveHelper
                 'eDocCaseSequenceNumber' => $eDocCaseSequenceNumber,
                 'documentIdentifier' => $documentDocumentIdentifier,
                 'filename' => $filename.$imageFormat,
-            ]) ??
-                (new Document())
-                    ->setArchiver($this->archiver)
-                    ->setEDocCaseSequenceNumber($eDocCaseSequenceNumber)
-                    ->setDocumentIdentifier($documentDocumentIdentifier)
-                    ->setFilename($filename.$imageFormat);
+            ]) ?? (new Document())
+                ->setArchiver($this->archiver)
+                ->setEDocCaseSequenceNumber($eDocCaseSequenceNumber)
+                ->setDocumentIdentifier($documentDocumentIdentifier)
+                ->setFilename($filename.$imageFormat);
 
             $minEjendomDocument->addData('[sag]', $sag);
 
@@ -186,25 +188,50 @@ class Helper extends AbstractArchiveHelper
             }
 
             $data = [
-                'byggesagGuid' => $byggesagGuid,
-                'originalCreatedDate' => $document->DocumentDate,
                 'EksternID' => $document->DocumentNumber,
                 'aktNummer' => $aktNummer,
                 'beskrivelse' => $mainDocument->TitleText ?? $document->TitleText,
+                'byggesagGuid' => $byggesagGuid,
                 'filename' => $filename,
                 'imageFormat' => $imageFormat,
+                'originalCreatedDate' => $document->DocumentDate,
             ];
 
             $minEjendomDocument->addData('[document][data]', $data);
 
-            $response = $this->minEjendom->createDocument($data, $version->getBinaryContents());
+            $binaryContents = $version->getBinaryContents();
 
-            $minEjendomDocument->addData('[document][response]', [
-                'status_code' => $response->getStatusCode(),
-                'body' => (string) $response->getBody(),
-            ]);
+            if (null === $minEjendomDocument->getId() || null === $minEjendomDocument->getDocumentGuid()) {
+                $response = $this->minEjendom->createDocument($data, $binaryContents);
+
+                $minEjendomDocument->addData('[document][response][create]', [
+                    'timestamp' => (new \DateTimeImmutable())->format(\DateTimeImmutable::ATOM),
+                    'status_code' => $response->getStatusCode(),
+                    'body' => (string) $response->getBody(),
+                ]);
+
+                if (200 === $response->getStatusCode()) {
+                    try {
+                        $documentGuid = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+                        if (\is_string($documentGuid)) {
+                            $minEjendomDocument->setDocumentGuid($documentGuid);
+                        }
+                    } catch (\JsonException $exception) {
+                    }
+                }
+            } else {
+                $data['dokumentGuid'] = $minEjendomDocument->getDocumentGuid();
+                $response = $this->minEjendom->editDocument($data, $binaryContents);
+
+                $minEjendomDocument->addData('[document][response][edit]', [
+                    'timestamp' => (new \DateTimeImmutable())->format(\DateTimeImmutable::ATOM),
+                    'status_code' => $response->getStatusCode(),
+                    'body' => (string) $response->getBody(),
+                ]);
+            }
 
             $this->info(sprintf('Response status code: %d', $response->getStatusCode()));
+            $this->debug(sprintf('Response body: %s', (string) $response->getBody()));
 
             $this->entityManager->persist($minEjendomDocument);
             $this->entityManager->flush();
