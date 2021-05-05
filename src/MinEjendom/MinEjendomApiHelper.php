@@ -56,31 +56,6 @@ class MinEjendomApiHelper
         return $response;
     }
 
-    /**
-     * @see http://test-byggesagerapi.adm.aarhuskommune.dk/swagger/ui/index#!/Dokument/Dokument_Edit
-     *
-     * @param mixed $content
-     */
-    public function editDocument(array $values, $content)
-    {
-        try {
-            $response = $this->client()->POST('api/Dokument/Edit', [
-                'query' => $values,
-                // @see https://docs.guzzlephp.org/en/latest/request-options.html#multipart
-                'multipart' => [
-                    [
-                        'name' => 'document',
-                        'contents' => $content,
-                    ],
-                ],
-            ]);
-        } catch (ClientException $exception) {
-            $response = $exception->getResponse();
-        }
-
-        return $response;
-    }
-
     private function client(): Client
     {
         if (null === $this->archiver) {
