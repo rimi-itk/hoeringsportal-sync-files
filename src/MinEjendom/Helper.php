@@ -21,6 +21,7 @@ use ItkDev\Edoc\Entity\CaseFile;
 use ItkDev\Edoc\Entity\Document as EDocDocument;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerTrait;
+use Symfony\Component\HttpFoundation\Response;
 
 class Helper extends AbstractArchiveHelper
 {
@@ -142,21 +143,31 @@ class Helper extends AbstractArchiveHelper
             $byggesagGuid = $sag['minEjendomGuid'];
 
             $documentDocumentIdentifier = $document->DocumentIdentifier;
+            $documentVersionIdentifier = $document->DocumentVersionIdentifier;
+
+            $minEjendomDocument = $this->documentRepository->findOneBy([
+                'archiver' => $this->archiver,
+                'eDocCaseSequenceNumber' => $eDocCaseSequenceNumber,
+                'documentIdentifier' => $documentDocumentIdentifier,
+                'documentVersionIdentifier' => $documentVersionIdentifier,
+            ]);
+
+            if (null !== $minEjendomDocument) {
+                $this->info(sprintf('Document %s (version: %s) already handled.', $document->DocumentNumber, $document->DocumentVersionIdentifier));
+
+                return;
+            }
 
             $version = $this->edoc->getDocumentVersion($document->DocumentVersionIdentifier);
             $imageFormat = '.'.strtolower($this->archiveFormats[$version->ArchiveFormatCode]->FileExtension ?? '');
             // Remove file extension.
             $filename = preg_replace('/'.preg_quote($imageFormat, '/').'/i', '', $document->TitleText);
 
-            $minEjendomDocument = $this->documentRepository->findOneBy([
-                'archiver' => $this->archiver,
-                'eDocCaseSequenceNumber' => $eDocCaseSequenceNumber,
-                'documentIdentifier' => $documentDocumentIdentifier,
-                'filename' => $filename.$imageFormat,
-            ]) ?? (new Document())
+            $minEjendomDocument = (new Document())
                 ->setArchiver($this->archiver)
                 ->setEDocCaseSequenceNumber($eDocCaseSequenceNumber)
                 ->setDocumentIdentifier($documentDocumentIdentifier)
+                ->setDocumentVersionIdentifier($documentVersionIdentifier)
                 ->setFilename($filename.$imageFormat);
 
             $minEjendomDocument->addData('[sag]', $sag);
@@ -182,14 +193,17 @@ class Helper extends AbstractArchiveHelper
 
             $this->info(sprintf('Version: %s', $version->DocumentVersionNumber));
 
-            $aktNummer = 1;
+            $documentNumber = 1;
             if (preg_match('/-(?<number>\d+)$/', $document->DocumentNumber, $matches)) {
-                $aktNummer = (int) $matches['number'];
+                $documentNumber = (int) $matches['number'];
             }
+            $aktNumber = sprintf('%d-%d', $documentNumber, $version->DocumentVersionNumber);
+
+            $this->info(sprintf('aktNumber: %s', $aktNumber));
 
             $data = [
                 'EksternID' => $document->DocumentNumber,
-                'aktNummer' => $aktNummer,
+                'aktNummer' => $aktNumber,
                 'beskrivelse' => $mainDocument->TitleText ?? $document->TitleText,
                 'byggesagGuid' => $byggesagGuid,
                 'filename' => $filename,
@@ -201,40 +215,43 @@ class Helper extends AbstractArchiveHelper
 
             $binaryContents = $version->getBinaryContents();
 
-            if (null === $minEjendomDocument->getId() || null === $minEjendomDocument->getDocumentGuid()) {
-                $response = $this->minEjendom->createDocument($data, $binaryContents);
+            $response = $this->minEjendom->createDocument($data, $binaryContents);
 
-                $minEjendomDocument->addData('[document][response][create]', [
-                    'timestamp' => (new \DateTimeImmutable())->format(\DateTimeImmutable::ATOM),
-                    'status_code' => $response->getStatusCode(),
-                    'body' => (string) $response->getBody(),
-                ]);
+            $minEjendomDocument->addData('[document][response][create]', [
+                'timestamp' => (new \DateTimeImmutable())->format(\DateTimeImmutable::ATOM),
+                'status_code' => $response->getStatusCode(),
+                'body' => (string) $response->getBody(),
+            ]);
 
-                if (200 === $response->getStatusCode()) {
-                    try {
-                        $documentGuid = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-                        if (\is_string($documentGuid)) {
-                            $minEjendomDocument->setDocumentGuid($documentGuid);
-                        }
-                    } catch (\JsonException $exception) {
+            if (Response::HTTP_OK === $response->getStatusCode()) {
+                try {
+                    $documentGuid = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+                    if (\is_string($documentGuid)) {
+                        $minEjendomDocument->setDocumentGuid($documentGuid);
                     }
+                } catch (\JsonException $exception) {
                 }
-            } else {
-                $data['dokumentGuid'] = $minEjendomDocument->getDocumentGuid();
-                $response = $this->minEjendom->editDocument($data, $binaryContents);
 
-                $minEjendomDocument->addData('[document][response][edit]', [
-                    'timestamp' => (new \DateTimeImmutable())->format(\DateTimeImmutable::ATOM),
-                    'status_code' => $response->getStatusCode(),
-                    'body' => (string) $response->getBody(),
+                // Delete old versions of the document.
+                $existingDocuments = $this->documentRepository->findBy([
+                    'archiver' => $this->archiver,
+                    'eDocCaseSequenceNumber' => $eDocCaseSequenceNumber,
+                    'documentIdentifier' => $documentDocumentIdentifier,
                 ]);
+
+                foreach ($existingDocuments as $existingDocument) {
+                    $this->info(sprintf('Deleting document %s', $existingDocument->getDocumentGuid()));
+                    $deleteResponse = $this->sager->deleteDocument($existingDocument->getDocumentGuid());
+                    $this->log(Response::HTTP_NO_CONTENT === $deleteResponse->getStatusCode() ? 'info' : 'error', sprintf('Response status code: %d', $deleteResponse->getStatusCode()));
+                    $this->entityManager->remove($existingDocument);
+                }
+
+                $this->entityManager->persist($minEjendomDocument);
+                $this->entityManager->flush();
             }
 
-            $this->info(sprintf('Response status code: %d', $response->getStatusCode()));
+            $this->log(Response::HTTP_OK === $response->getStatusCode() ? 'info' : 'error', sprintf('Response status code: %d', $response->getStatusCode()));
             $this->debug(sprintf('Response body: %s', (string) $response->getBody()));
-
-            $this->entityManager->persist($minEjendomDocument);
-            $this->entityManager->flush();
         } catch (\Throwable $t) {
             $this->logException($t, [
                 'sag' => $sag,

@@ -12,6 +12,7 @@ namespace App\MinEjendom;
 
 use App\Entity\Archiver;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 
 class SagerApiHelper
 {
@@ -43,6 +44,17 @@ class SagerApiHelper
         $response = $this->client()->GET('api/sager');
 
         return json_decode((string) $response->getBody(), true);
+    }
+
+    public function deleteDocument(string $documentGuid)
+    {
+        try {
+            $response = $this->client()->DELETE('api/Dokumenter/'.$documentGuid);
+        } catch (ClientException $exception) {
+            $response = $exception->getResponse();
+        }
+
+        return $response;
     }
 
     private function client(): Client

@@ -12,16 +12,20 @@ namespace App\Entity\MinEjendom;
 
 use App\Entity\Archiver;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
+use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\MinEjendom\DocumentRepository")
  * @ORM\Table(name="minejendom_document")
+ * @Gedmo\SoftDeleteable()
  */
 class Document
 {
     use TimestampableEntity;
+    use SoftDeleteableEntity;
 
     /**
      * @ORM\Id()
@@ -38,11 +42,18 @@ class Document
     private $eDocCaseSequenceNumber;
 
     /**
-     * The eDoc document id.
+     * The eDoc document identifier.
      *
      * @ORM\Column(type="string", length=255)
      */
     private $documentIdentifier;
+
+    /**
+     * The eDoc document version identifier.
+     *
+     * @ORM\Column(type="string", length=255)
+     */
+    private $documentVersionIdentifier;
 
     /**
      * The MinEjendom document guid.
@@ -94,6 +105,18 @@ class Document
     public function setDocumentIdentifier(string $documentIdentifier): self
     {
         $this->documentIdentifier = $documentIdentifier;
+
+        return $this;
+    }
+
+    public function getDocumentVersionIdentifier(): ?string
+    {
+        return $this->documentVersionIdentifier;
+    }
+
+    public function setDocumentVersionIdentifier($documentVersionIdentifier): self
+    {
+        $this->documentVersionIdentifier = $documentVersionIdentifier;
 
         return $this;
     }
