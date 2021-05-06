@@ -98,18 +98,45 @@ class Helper extends AbstractArchiveHelper
                                 continue;
                             }
 
+                            // Build a list of current version identifiers in the document.
+                            $documentVersionIdentifiers = [];
+
                             // Some documents don't have a version identifier,
                             // i.e. they have no files.
-                            if (empty($document->DocumentVersionIdentifier)) {
-                                return;
+                            if (isset($document->DocumentVersionIdentifier)) {
+                                $this->createDocument($document, $sag, $case);
+
+                                $documentVersionIdentifiers[] = $document->DocumentVersionIdentifier;
+
+                                $attachments = $this->edoc->getAttachments($document);
+                                foreach ($attachments as $attachment) {
+                                    $this->createDocument($attachment, $sag, $case, $document);
+                                    $documentVersionIdentifiers[] = $attachment->DocumentVersionIdentifier;
+                                }
                             }
 
-                            $this->createDocument($document, $sag, $case);
+                            // Delete old versions of the document.
+                            $existingDocuments = $this->documentRepository->findBy([
+                                'archiver' => $this->archiver,
+                                'eDocCaseSequenceNumber' => $eDocCaseSequenceNumber,
+                                'documentIdentifier' => $document->DocumentIdentifier,
+                            ]);
 
-                            $attachments = $this->edoc->getAttachments($document);
-                            foreach ($attachments as $attachment) {
-                                $this->createDocument($attachment, $sag, $case, $document);
+                            foreach ($existingDocuments as $existingDocument) {
+                                // Any version that's not in the current list must be deleted.
+                                if (null !== $existingDocument->getDocumentGuid()
+                                && !\in_array(
+                                    $existingDocument->getDocumentVersionIdentifier(),
+                                    $documentVersionIdentifiers,
+                                    true
+                                )) {
+                                    $this->info(sprintf('Deleting document %s (version %s)', $existingDocument->getDocumentGuid(), $existingDocument->getDocumentVersionIdentifier()));
+                                    $deleteResponse = $this->sager->deleteDocument($existingDocument->getDocumentGuid());
+                                    $this->log(Response::HTTP_NO_CONTENT === $deleteResponse->getStatusCode() ? 'info' : 'error', sprintf('Response status code: %d', $deleteResponse->getStatusCode()));
+                                    $this->entityManager->remove($existingDocument);
+                                }
                             }
+                            $this->entityManager->flush();
                         } catch (\Throwable $t) {
                             $this->logException($t, [
                                 'sag' => $sag,
@@ -231,24 +258,10 @@ class Helper extends AbstractArchiveHelper
                     }
                 } catch (\JsonException $exception) {
                 }
-
-                // Delete old versions of the document.
-                $existingDocuments = $this->documentRepository->findBy([
-                    'archiver' => $this->archiver,
-                    'eDocCaseSequenceNumber' => $eDocCaseSequenceNumber,
-                    'documentIdentifier' => $documentDocumentIdentifier,
-                ]);
-
-                foreach ($existingDocuments as $existingDocument) {
-                    $this->info(sprintf('Deleting document %s', $existingDocument->getDocumentGuid()));
-                    $deleteResponse = $this->sager->deleteDocument($existingDocument->getDocumentGuid());
-                    $this->log(Response::HTTP_NO_CONTENT === $deleteResponse->getStatusCode() ? 'info' : 'error', sprintf('Response status code: %d', $deleteResponse->getStatusCode()));
-                    $this->entityManager->remove($existingDocument);
-                }
-
-                $this->entityManager->persist($minEjendomDocument);
-                $this->entityManager->flush();
             }
+
+            $this->entityManager->persist($minEjendomDocument);
+            $this->entityManager->flush();
 
             $this->log(Response::HTTP_OK === $response->getStatusCode() ? 'info' : 'error', sprintf('Response status code: %d', $response->getStatusCode()));
             $this->debug(sprintf('Response body: %s', (string) $response->getBody()));
