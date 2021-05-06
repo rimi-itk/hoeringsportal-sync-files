@@ -224,7 +224,7 @@ class Helper extends AbstractArchiveHelper
             if (preg_match('/-(?<number>\d+)$/', $document->DocumentNumber, $matches)) {
                 $documentNumber = (int) $matches['number'];
             }
-            $aktNumber = sprintf('%d-%d', $documentNumber, $version->DocumentVersionNumber);
+            $aktNumber = sprintf('%d', $documentNumber);
 
             $this->info(sprintf('aktNumber: %s', $aktNumber));
 
