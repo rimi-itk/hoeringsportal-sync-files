@@ -19,7 +19,12 @@ use Symfony\Component\PropertyAccess\PropertyAccess;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\MinEjendom\DocumentRepository")
- * @ORM\Table(name="minejendom_document")
+ * @ORM\Table(
+ *     name="minejendom_document",
+ *     indexes={
+ *         @ORM\Index(name="search_idx", columns={"e_doc_case_sequence_number", "document_identifier", "document_version_identifier"})
+ *     }
+ * )
  * @Gedmo\SoftDeleteable()
  */
 class Document
