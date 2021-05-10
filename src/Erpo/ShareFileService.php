@@ -8,9 +8,10 @@
  * This source file is subject to the MIT license.
  */
 
-namespace App\Service;
+namespace App\Erpo;
 
 use App\Entity\Archiver;
+use App\Service\ShareFileClient;
 use App\ShareFile\Item;
 use Kapersoft\ShareFile\Client;
 use Symfony\Component\Console\Helper\Table;
@@ -52,99 +53,41 @@ class ShareFileService
      */
     public function getUpdatedFiles(\DateTime $changedAfter)
     {
-        $hearings = $this->getHearings($changedAfter);
-        foreach ($hearings as &$hearing) {
-            $responses = $this->getResponses($hearing, $changedAfter);
-            foreach ($responses as &$response) {
-                $files = $this->getFiles($response, $changedAfter);
-                $response->setChildren($files);
-            }
-            $hearing->setChildren($responses);
+        $items = $this->getErpoItems($changedAfter);
+        foreach ($items as &$item) {
+            $files = $this->getFiles($item, $changedAfter);
+            $item->setChildren($files);
         }
 
-        return $hearings;
-    }
-
-    /**
-     * @param null|\DateTime $changedAfter
-     *
-     * @return Item[]
-     */
-    public function getUpdatedOverviewFiles(\DateTime $changedAfter)
-    {
-        $hearings = $this->getHearings($changedAfter);
-        foreach ($hearings as &$hearing) {
-            $files = $this->getFiles($hearing, $changedAfter);
-            $hearing->setChildren($files);
-        }
-
-        return $hearings;
-    }
-
-    /**
-     * @param mixed $hearingItemId
-     *
-     * @return Item[]
-     */
-    public function getHearingOverviewFiles($hearingItemId)
-    {
-        $hearing = $this->getHearing($hearingItemId);
-        if (null !== $hearing) {
-            $files = $this->getFiles($hearing);
-            $hearing->setChildren($files);
-        }
-
-        return $hearing;
+        return $items;
     }
 
     /**
      * @return Item[]
      */
-    public function getHearings(\DateTime $changedAfter = null)
+    public function getErpoItems(\DateTime $changedAfter = null)
     {
         $itemId = $this->configuration['root_id'];
         $folders = $this->getFolders($itemId, $changedAfter);
-        $hearings = array_filter($folders ?? [], function ($item) use ($changedAfter) {
+        $erpoItems = array_filter($folders ?? [], function ($item) use ($changedAfter) {
             if ($changedAfter && isset($item['ProgenyEditDate'])
                 && new \DateTime($item['ProgenyEditDate']) < $changedAfter) {
                 return false;
             }
 
-            return $this->isHearing($item);
+            return $this->isErpoItem($item);
         });
 
-        return $this->construct(Item::class, $hearings);
+        return $this->construct(Item::class, $erpoItems);
     }
 
-    public function findHearing($name)
+    public function getErpoItem($itemId)
     {
-        $itemId = $this->configuration['root_id'];
+        $item = $this->getItem($itemId);
+        $files = $this->getFiles($item);
+        $item->setChildren($files);
 
-        $result = $this->client()->getChildren(
-            $itemId,
-            [
-                '$filter' => 'Name eq \''.str_replace('\'', '\\\'', $name).'\'',
-            ]
-        );
-
-        if (!isset($result['value']) || 1 !== \count($result['value'])) {
-            throw new \RuntimeException('Invalid hearing: '.$name);
-        }
-
-        return new Item(reset($result['value']));
-    }
-
-    public function getHearing($itemId)
-    {
-        $hearing = $this->getItem($itemId);
-        $responses = $this->getResponses($hearing);
-        foreach ($responses as &$response) {
-            $files = $this->getFiles($response);
-            $response->setChildren($files);
-        }
-        $hearing->setChildren($responses);
-
-        return $hearing;
+        return $item;
     }
 
     /**
@@ -191,7 +134,6 @@ class ShareFileService
     {
         $itemId = $this->getItemId($item);
         $metadata = $this->client()->getItemMetadataList($itemId);
-
         if (null !== $names) {
             $metadata['value'] = array_filter($metadata['value'], function ($item) use ($names) {
                 return isset($item['Name']) && \in_array($item['Name'], $names, true);
@@ -250,6 +192,10 @@ class ShareFileService
             return !(null !== $changedAfter && isset($item['CreationDate'])
                 && new \DateTime($item['CreationDate']) < $changedAfter);
         });
+        // Add metadata values to each file.
+        foreach ($files as &$file) {
+            $this->setMetadata($file);
+        }
 
         return $this->construct(Item::class, $files);
     }
@@ -332,7 +278,7 @@ class ShareFileService
 
     private function setMetadata(array &$item)
     {
-        $item['_metadata'] = $this->getMetadataValues($item['Id'], ['agent_data', 'ticket_data', 'user_data']);
+        $item['_metadata'] = $this->getMetadataValues($item['Id']);
     }
 
     private function validateConfiguration()
@@ -451,9 +397,9 @@ class ShareFileService
         return $this->client;
     }
 
-    private function isHearing(array $item)
+    private function isErpoItem(array $item)
     {
-        return preg_match('/^H([a-z-]+)?[0-9]+$/i', $item['Name']);
+        return true;
     }
 
     private function isHearingResponse(array $item)

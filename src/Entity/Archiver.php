@@ -27,7 +27,9 @@ class Archiver implements Loggable, \JsonSerializable
 {
     use TimestampableEntity;
     public const TYPE_SHAREFILE2EDOC = 'sharefile2edoc';
+    public const TYPE_ERPO2SHAREFILE2EDOC = 'erpo2sharefile2edoc';
     public const TYPE_PDF_COMBINE = 'pdfcombine';
+    public const TYPE_MIN_EJENDOM = 'minejendom';
 
     /**
      * @ORM\Id()
@@ -139,11 +141,16 @@ class Archiver implements Loggable, \JsonSerializable
         return $propertyAccessor->getValue($configuration, $key) ?? $default;
     }
 
-    public function getCreateHearing(): bool
+    public function getCreateCaseFile(): bool
     {
         $value = $this->getConfigurationValue('edoc');
 
         return isset($value['project_id']);
+    }
+
+    public function getCreateHearing(): bool
+    {
+        return $this->getCreateCaseFile();
     }
 
     /**

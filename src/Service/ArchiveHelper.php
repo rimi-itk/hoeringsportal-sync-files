@@ -62,7 +62,7 @@ class ArchiveHelper extends AbstractArchiveHelper
             }
 
             if ($archiver->getType() !== $this->archiverType) {
-                throw new \RuntimeException('Cannot handle archiver with type'.$archiver->getType());
+                throw new \RuntimeException('Cannot handle archiver with type '.$archiver->getType());
             }
 
             $this->shareFile->setArchiver($archiver);

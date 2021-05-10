@@ -30,6 +30,9 @@ easy_admin:
             - entity: EdocCaseFile
             - entity: EdocDocument
 
+            - label: 'Min ejendom'
+            - entity: MinEjendomDocument
+
     formats:
         datetime: 'd/m/Y H:i:s'
 
@@ -57,7 +60,9 @@ easy_admin:
                       type_options:
                           choices:
                               sharefile2edoc: !php/const App\Entity\Archiver::TYPE_SHAREFILE2EDOC
+                              !php/const App\Entity\Archiver::TYPE_ERPO2SHAREFILE2EDOC: !php/const App\Entity\Archiver::TYPE_ERPO2SHAREFILE2EDOC
                               pdfcombine: !php/const App\Entity\Archiver::TYPE_PDF_COMBINE
+                              !php/const App\Entity\Archiver::TYPE_MIN_EJENDOM: !php/const App\Entity\Archiver::TYPE_MIN_EJENDOM
 
                     - property: enabled
                     - property: configuration
@@ -186,3 +191,42 @@ easy_admin:
                     - property: createdAt
                     - property: data
                       template: admin/Edoc/show/data.html.twig
+
+        MinEjendomDocument:
+            label: Document
+            class: App\Entity\MinEjendom\Document
+            disabled_actions: ['new', 'edit', 'delete']
+
+            list:
+                form_filters:
+                    # - archiver
+
+                sort: ['updatedAt', 'DESC']
+
+                fields:
+                    - property: archiver
+                    - property: eDocCase
+                      label: eDoc case
+                      template: admin/MinEjendom/Document/list/eDocCase.html.twig
+                    - property: eDocDocument
+                      label: eDoc document
+                      template: admin/MinEjendom/Document/list/eDocDocument.html.twig
+                    - property: filename
+                      template: admin/MinEjendom/Document/list/filename.html.twig
+                    - property: updatedAt
+                    - property: createdAt
+
+            show:
+                fields:
+                    - property: archiver
+                    - property: eDocCase
+                      label: eDoc case
+                      template: admin/MinEjendom/Document/list/eDocCase.html.twig
+                    - property: filename
+                      template: admin/MinEjendom/Document/list/filename.html.twig
+                    - property: documentIdentifier
+                    - property: documentGuid
+                    - property: updatedAt
+                    - property: createdAt
+                    - property: data
+                      template: admin/MinEjendom/show/data.html.twig

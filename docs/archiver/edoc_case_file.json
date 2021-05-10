@@ -1,0 +1,32 @@
+{
+    "esdh": "20/098705",
+    "edoc_case_file": {
+        "TitleText": "100155845 – test sagstitel",
+        "SequenceNumber": "20/098705",
+        "CreationDate": "2020-11-03",
+        "CaseFileIdentifier": "1afbcbd1-441a-4f55-9025-d70f320dc339",
+        "Links": {
+            "OpenCaseFile": "http://EDOC:8080/locator.aspx?name=DMS.Case.Details.300001&module=Case&subtype=300001&recno=1115406"
+        },
+        "ModifiedDate": "2020-11-03 20:55:58",
+        "Paper": "0",
+        "HandlingCodeName": "K04",
+        "CaseFileManagerReference": "544443",
+        "OrganisationReference": "500164",
+        "CheckCode01": "0",
+        "ProjectName": "20-01762",
+        "Project": "534434",
+        "AccessCodeName": "Uafklaret",
+        "AccessCode": "0",
+        "DisposalCodeName": "I",
+        "PrimaryCodeTypeName": "01.04.00",
+        "OrganisationName": "MKB-Borgerservice",
+        "CreatorName": "Sagsbehandler",
+        "CheckCode01Name": "Åben for alle",
+        "CaseFileTypeCodeName": "Administrativsag",
+        "CaseFileStatusCodeName": "Åben",
+        "CaseWorkerAccountName": "adm\\svcedocmkb",
+        "CaseFileManagerName": "Svcedoc MKB",
+        "CaseYear": "2020"
+    }
+}

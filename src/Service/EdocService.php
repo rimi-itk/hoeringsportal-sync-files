@@ -32,9 +32,14 @@ use ItkDev\Edoc\Entity\Entity;
 use ItkDev\Edoc\Util\Edoc;
 use ItkDev\Edoc\Util\EdocClient;
 use ItkDev\Edoc\Util\ItemListType;
+use RecursiveArrayIterator;
+use RecursiveIteratorIterator;
 
 class EdocService
 {
+    public const CREATED = 'created';
+    public const UPDATED = 'updated';
+
     /** @var CaseFileRepository */
     private $caseFileRepository;
 
@@ -55,6 +60,18 @@ class EdocService
 
     /** @var Edoc */
     private $edoc;
+
+    /** @var array */
+    private $documentTypes;
+
+    /** @var array */
+    private $documentStatuses;
+
+    /** @var array */
+    private $handlingCodeTree;
+
+    /** @var array */
+    private $primaryCodeTree;
 
     public function __construct(CaseFileRepository $caseFileRepository, DocumentRepository $documentRepository, TemplateHelper $template)
     {
@@ -129,6 +146,88 @@ class EdocService
     public function getHearings()
     {
         return $this->getCases();
+    }
+
+    /**
+     * Ensure that a case file exists.
+     *
+     * @param array $data additional data for new case file
+     *
+     * @throws \ItkDev\Edoc\Util\EdocException
+     *
+     * @return CaseFile
+     */
+    public function ensureCaseFile(Item $item, array $data = [], array $config = [])
+    {
+        $caseFile = $this->caseFileRepository->findOneByItemAndArchiver($item, $this->archiver);
+
+        $edocCaseFile = $caseFile ? $this->getCaseById($caseFile->getCaseFileIdentifier()) : null;
+
+        if (null !== $edocCaseFile) {
+            if (\is_callable($config['callback'] ?? null)) {
+                $config['callback']([
+                    'status' => static::UPDATED,
+                    'item' => $item,
+                    'data' => $data,
+                    'case_file' => $edocCaseFile,
+                ]);
+            }
+            // @TODO Update case file?
+            return $edocCaseFile;
+        }
+
+        return $this->createCaseFile($item, $data, $config);
+    }
+
+    /**
+     * Create a case file.
+     *
+     * @param array $data additional data for new case file
+     *
+     * @throws \ItkDev\Edoc\Util\EdocException
+     *
+     * @return CaseFile
+     */
+    public function createCaseFile(Item $item, array $data = [], array $config = [])
+    {
+        $name = $this->getCaseFileName($item);
+        $data += [
+            'TitleText' => $name,
+        ];
+
+        if (isset($this->configuration['project_id'])) {
+            $data += ['Project' => $this->configuration['project_id']];
+        }
+
+        if (isset($this->configuration['case_file']['defaults'])) {
+            $data += $this->configuration['case_file']['defaults'];
+        }
+
+        $caseFile = $this->edoc()->createCaseFile($data);
+
+        $this->caseFileRepository->created($caseFile, $item, $this->archiver);
+
+        if (\is_callable($config['callback'] ?? null)) {
+            $config['callback']([
+                'status' => self::CREATED,
+                'item' => $item,
+                'data' => $data,
+                'case_file' => $caseFile,
+            ]);
+        }
+
+        return $caseFile;
+    }
+
+    public function updateCaseFile(CaseFile $caseFile, Item $item, array $data)
+    {
+        if ($this->edoc()->updateCaseFile($caseFile, $data)) {
+            $this->caseFileRepository->updated($caseFile, $item, $this->archiver);
+
+            return $this->getCaseById($caseFile->CaseFileIdentifier);
+        }
+
+        return null;
     }
 
     /**
@@ -211,6 +310,28 @@ class EdocService
         return $this->createResponse($hearing, $item, $data);
     }
 
+    /**
+     * Ensure that a document exists in eDoc.
+     *
+     * @param bool $create
+     *
+     * @throws \ItkDev\Edoc\Util\EdocException
+     *
+     * @return null|Document|mixed
+     */
+    public function ensureDocument(CaseFile $hearing, Item $item, array $data = [])
+    {
+        $document = $this->documentRepository->findOneByItemAndArchiver($item, $this->archiver);
+
+        $edocDocument = $document ? $this->getDocumentById($document->getDocumentIdentifier()) : null;
+        if (null !== $edocDocument) {
+            // @TODO Update document.
+            return $edocDocument;
+        }
+
+        return $this->createDocument($hearing, $item, $data);
+    }
+
     public function getDocumentUpdatedAt(Document $document)
     {
         $document = $this->documentRepository->findOneByDocumentAndArchiver($document, $this->archiver);
@@ -269,9 +390,9 @@ class EdocService
         $this->edoc()->attachFile($document, $name, $contents);
     }
 
-    public function getAttachments($documentId)
+    public function getAttachments(Document $document)
     {
-        return $this->edoc()->getAttachments(['DocumentIdentifier' => $documentId]);
+        return $this->edoc()->getDocumentAttachmentList($document);
     }
 
     /**
@@ -343,9 +464,16 @@ class EdocService
         return 1 === \count($result) ? reset($result) : null;
     }
 
-    public function getDocuments(array $case)
+    public function getDocumentList(CaseFile $case)
     {
-        return $this->edoc()->searchDocument($case);
+        return $this->edoc()->getDocumentList($case);
+    }
+
+    public function getDocuments(CaseFile $case)
+    {
+        return $this->edoc()->searchDocument([
+            'CaseFileIdentifier' => '200031',
+        ]);
     }
 
     public function getDocumentsBy(array $criteria)
@@ -360,6 +488,13 @@ class EdocService
         return 1 === \count($result) ? reset($result) : null;
     }
 
+    public function getDocumentByNumber(string $number)
+    {
+        $result = $this->edoc()->searchDocument(['DocumentNumber' => $number]);
+
+        return 1 === \count($result) ? reset($result) : null;
+    }
+
     public function getDocumentByName(CaseFile $case, string $name)
     {
         $result = $this->edoc()->searchDocument([
@@ -368,6 +503,11 @@ class EdocService
         ]);
 
         return 1 === \count($result) ? reset($result) : null;
+    }
+
+    public function getDocumentVersion(string $documentVersionIdentifier)
+    {
+        return $this->edoc()->getDocumentVersion($documentVersionIdentifier);
     }
 
     public function getCaseWorkerByAz($az)
@@ -409,6 +549,77 @@ class EdocService
             ]);
         } catch (\Exception $exception) {
         }
+    }
+
+    public function getDocumentTypeByName(string $name)
+    {
+        if (null === $this->documentTypes) {
+            $this->documentTypes = $this->edoc()->getItemList(ItemListType::DOCUMENT_TYPE);
+        }
+
+        if (\is_array($this->documentTypes)) {
+            foreach ($this->documentTypes as $item) {
+                if (0 === strcasecmp($name, $item['DocumentTypeName'])) {
+                    return $item;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public function getDocumentStatusByName(string $name)
+    {
+        if (null === $this->documentStatuses) {
+            $this->documentStatuses = $this->edoc()->getItemList(ItemListType::DOCUMENT_STATUS_CODE);
+        }
+
+        if (\is_array($this->documentStatuses)) {
+            foreach ($this->documentStatuses as $item) {
+                if (0 === strcasecmp($name, $item['DocumentStatusCodeName'])) {
+                    return $item;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public function getHandlingCodeByName(string $name)
+    {
+        if (null === $this->handlingCodeTree) {
+            $this->handlingCodeTree = $this->edoc()->getItemList(ItemListType::HANDLING_CODE_TREE);
+        }
+
+        if (\is_array($this->handlingCodeTree)) {
+            foreach ($this->handlingCodeTree as $item) {
+                if (0 === strcasecmp($name, $item['HandlingCodeName'])) {
+                    return $item;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public function getPrimaryCodeByCode(string $code)
+    {
+        if (null === $this->primaryCodeTree) {
+            $this->primaryCodeTree = $this->edoc()->getItemList(ItemListType::PRIMARY_CODE_TREE);
+        }
+
+        $primaryCode = null;
+        if (\is_array($this->primaryCodeTree)) {
+            foreach (new RecursiveIteratorIterator(new RecursiveArrayIterator($this->primaryCodeTree), RecursiveIteratorIterator::CHILD_FIRST) as $key => $value) {
+                if (isset($value['PrimaryCodeCode']) && $code === $value['PrimaryCodeCode']) {
+                    $primaryCode = $value;
+
+                    break;
+                }
+            }
+        }
+
+        return $primaryCode;
     }
 
     private function getCaseFileName(Item $item)
