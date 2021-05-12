@@ -72,6 +72,8 @@ class Helper extends AbstractArchiveHelper
         $this->archiver = $archiver;
 
         try {
+            $startTime = new \DateTimeImmutable();
+
             $this->sager->setArchiver($archiver);
             $this->edoc->setArchiver($archiver);
             $this->minEjendom->setArchiver($archiver);
@@ -151,6 +153,10 @@ class Helper extends AbstractArchiveHelper
                     ]);
                 }
             }
+
+            $archiver->setLastRunAt($startTime);
+            $this->entityManager->persist($archiver);
+            $this->entityManager->flush();
         } catch (\Throwable $t) {
             $this->logException($t);
         }
