@@ -78,7 +78,7 @@ class Helper extends AbstractArchiveHelper
 
             // Archive formats indexed by Code.
             $this->archiveFormats = array_column($this->edoc->getArchiveFormats(), null, 'Code');
-            $sager = $this->sager->getSager();
+            $sager = $this->sager->getSager($options['get-completed-cases'] ?? false);
             foreach ($sager as $index => $sag) {
                 try {
                     $eDocCaseSequenceNumber = $sag['esdh'];

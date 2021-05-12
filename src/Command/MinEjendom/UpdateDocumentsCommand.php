@@ -37,7 +37,8 @@ class UpdateDocumentsCommand extends Command
         $this->setName('app:min-ejendom:update-documents')
             ->setDescription('Upload documents to “Min ejendom”')
             ->addOption('eDoc-case-sequence-number', null, InputOption::VALUE_REQUIRED, 'eDoc case to update')
-            ->addOption('eDoc-document-number', null, InputOption::VALUE_REQUIRED, 'eDoc document to update');
+            ->addOption('eDoc-document-number', null, InputOption::VALUE_REQUIRED, 'eDoc document to update')
+            ->addOption('process-completed-cases');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -51,6 +52,7 @@ class UpdateDocumentsCommand extends Command
         $this->helper->updateDocuments($this->archiver, [
             'eDocCaseSequenceNumber' => $eDocCaseSequenceNumber,
             'eDocDocumentNumber' => $eDocDocumentNumber,
+            'get-completed-cases' => $input->getOption('process-completed-cases'),
         ]);
     }
 }

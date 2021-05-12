@@ -39,9 +39,10 @@ class SagerApiHelper
      *
      * @return array
      */
-    public function getSager()
+    public function getSager(bool $getCompleted = false)
     {
-        $response = $this->client()->GET('api/sager');
+        $path = $getCompleted ? 'api/sager/afsluttede' : 'api/sager';
+        $response = $this->client()->GET($path);
 
         return json_decode((string) $response->getBody(), true);
     }
