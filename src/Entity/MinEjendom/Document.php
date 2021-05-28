@@ -70,7 +70,7 @@ class Document
     /**
      * The document filename.
      *
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=1024)
      */
     private $filename;
 
@@ -177,7 +177,7 @@ class Document
 
     public function setFilename(string $filename): self
     {
-        $this->filename = $filename;
+        $this->filename = substr($filename, 0, 1024 - 1);
 
         return $this;
     }
