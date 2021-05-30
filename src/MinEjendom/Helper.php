@@ -90,7 +90,7 @@ class Helper extends AbstractArchiveHelper
                         continue;
                     }
 
-                    $this->info(sprintf('% 4d: %s -> %s', $index + 1, $eDocCaseSequenceNumber, $byggesagGuid));
+                    $this->info(sprintf('%s % 8d/%- 8d: %s -> %s', (new \DateTimeImmutable())->format(\DateTimeImmutable::ATOM), $index + 1, \count($sager), $eDocCaseSequenceNumber, $byggesagGuid));
 
                     $case = $this->edoc->getCaseBySequenceNumber($eDocCaseSequenceNumber);
                     $documents = $this->edoc->getDocumentList($case);
