@@ -22,7 +22,9 @@ use Symfony\Component\PropertyAccess\PropertyAccess;
  * @ORM\Table(
  *     name="minejendom_document",
  *     indexes={
- *         @ORM\Index(name="search_idx", columns={"e_doc_case_sequence_number", "document_identifier", "document_version_identifier"})
+ *         @ORM\Index(name="search_idx", columns={"e_doc_case_sequence_number", "document_identifier", "document_version_identifier"}),
+ *         @ORM\Index(name="created_at_idx", columns={"created_at"}),
+ *         @ORM\Index(name="updated_at_idx", columns={"updated_at"})
  *     }
  * )
  * @Gedmo\SoftDeleteable()

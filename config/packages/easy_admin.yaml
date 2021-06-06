@@ -205,6 +205,7 @@ easy_admin:
 
                 fields:
                     - property: archiver
+                      sortable: false
                     - property: eDocCase
                       label: eDoc case
                       template: admin/MinEjendom/Document/list/eDocCase.html.twig
@@ -212,6 +213,7 @@ easy_admin:
                       label: eDoc document
                       template: admin/MinEjendom/Document/list/eDocDocument.html.twig
                     - property: filename
+                      sortable: false
                       template: admin/MinEjendom/Document/list/filename.html.twig
                     - property: updatedAt
                     - property: createdAt
