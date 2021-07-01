@@ -100,6 +100,12 @@ class Helper extends AbstractArchiveHelper
                                 continue;
                             }
 
+                            // Skip draft documents.
+                            if (1 == $document->DocumentStatusCode) {
+                                $this->info(sprintf('Skipping draft document %s', $document->DocumentNumber));
+                                continue;
+                            }
+
                             // Build a list of current version identifiers in the document.
                             $documentVersionIdentifiers = [];
 
